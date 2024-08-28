@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Search</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 600px; margin: auto; }
+        input[type="text"] { width: 100%; padding: 10px; margin: 10px 0; }
+        button { padding: 10px 20px; }
+        .results { margin-top: 20px; }
+        .result-item { border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Job Search</h1>
+        <form id="search-form">
+            <input type="text" id="keyword" name="keyword" placeholder="Enter job keyword" required>
+            <button type="submit">Search</button>
+        </form>
+        <div id="results" class="results"></div>
+    </div>
+
+    <script>
+        document.getElementById('search-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const keyword = document.getElementById('keyword').value;
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = 'Searching...';
+
+            try {
+                const response = await fetch(`/search?keyword=${encodeURIComponent(keyword)}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    if (data.results.length === 0) {
+                        resultsDiv.innerHTML = 'No jobs found for the keyword.';
+                    } else {
+                        resultsDiv.innerHTML = data.results.map(result => `
+                            <div class="result-item">
+                                <h2>Jobs found on ${result.url}:</h2>
+                                <ul>
+                                    ${result.jobs.map(job => `<li>${job}</li>`).join('')}
+                                </ul>
+                            </div>
+                        `).join('');
+                    }
+                } else {
+                    resultsDiv.innerHTML = data.message || 'An error occurred.';
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = 'An error occurred.';
+            }
+        });
+    </script>
+</body>
+</html>
