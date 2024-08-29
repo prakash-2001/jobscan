@@ -37,7 +37,7 @@ def parse_jobs(html, keyword):
 
 @app.get("/")
 async def index():
-    return {"message": "Welcome to Job Scan"}
+    return render_template('index.html')
 
 @app.get("/search")
 async def search_jobs(keyword: str):
