@@ -1,11 +1,12 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 import aiohttp
-from pydantic import BaseModel
 import asyncio
 from bs4 import BeautifulSoup
+from pydantic import BaseModel
 import os
 from typing import List, Dict
+
 app = FastAPI()
 
 async def fetch(session, url):
@@ -24,9 +25,12 @@ def parse_jobs(html, keyword):
     soup = BeautifulSoup(html, 'html.parser')
     job_elements = []
 
+    keyword_lower = keyword.lower()  # Convert keyword to lowercase for case-insensitive comparison
+
     # Customize these selectors based on the website's HTML structure
     for job in soup.find_all(['h2', 'h3', 'p']):  # Example tags
-        if keyword.lower() in job.get_text().lower():
+        job_text = job.get_text().lower()  # Convert job text to lowercase
+        if keyword_lower in job_text:
             job_elements.append(job.get_text())
 
     return job_elements
