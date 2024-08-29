@@ -1,5 +1,6 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
+from fastapi.templating import Jinja2Templates
 import aiohttp
 import asyncio
 from bs4 import BeautifulSoup
@@ -8,6 +9,7 @@ import os
 from typing import List, Dict
 
 app = FastAPI()
+templates = Jinja2Templates(directory="templates")
 
 async def fetch(session, url):
     try:
@@ -25,19 +27,18 @@ def parse_jobs(html, keyword):
     soup = BeautifulSoup(html, 'html.parser')
     job_elements = []
 
-    keyword_lower = keyword.lower()  # Convert keyword to lowercase for case-insensitive comparison
+    keyword_lower = keyword.lower()
 
-    # Customize these selectors based on the website's HTML structure
-    for job in soup.find_all(['h2', 'h3', 'p']):  # Example tags
-        job_text = job.get_text().lower()  # Convert job text to lowercase
+    for job in soup.find_all(['h2', 'h3', 'p']):
+        job_text = job.get_text().lower()
         if keyword_lower in job_text:
             job_elements.append(job.get_text())
 
     return job_elements
 
 @app.get("/")
-async def index():
-    return render_template('index.html')
+async def index(request: Request):
+    return templates.TemplateResponse('index.html', {"request": request})
 
 @app.get("/search")
 async def search_jobs(keyword: str):
@@ -72,4 +73,4 @@ async def search_jobs(keyword: str):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
+    uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get('PORT', 8000)))
