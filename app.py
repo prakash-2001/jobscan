@@ -1,10 +1,12 @@
-from flask import Flask, request, jsonify, render_template
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 import aiohttp
 import asyncio
 from bs4 import BeautifulSoup
-import os
+from typing import List, Dict
 
-app = Flask(__name__)
+app = FastAPI()
 
 async def fetch(session, url):
     try:
@@ -21,33 +23,32 @@ async def fetch_all(urls):
 def parse_jobs(html, keyword):
     soup = BeautifulSoup(html, 'html.parser')
     job_elements = []
-    
+
     # Customize these selectors based on the website's HTML structure
     for job in soup.find_all(['h2', 'h3', 'p']):  # Example tags
         if keyword.lower() in job.get_text().lower():
             job_elements.append(job.get_text())
-    
+
     return job_elements
 
-@app.route('/')
-def index():
-    return render_template('index.html')
+@app.get("/")
+async def index():
+    return {"message": "Welcome to Job Scan"}
 
-@app.route('/search', methods=['GET'])
-async def search_jobs():
-    keyword = request.args.get('keyword', '').strip()
+@app.get("/search")
+async def search_jobs(keyword: str):
     if not keyword:
-        return jsonify({"error": "Keyword is required"}), 400
+        raise HTTPException(status_code=400, detail="Keyword is required")
 
     urls = [
         "https://www.capgemini.com/in-en/careers/",
         "https://www.oracle.com/in/careers/opportunities/engineering-development/",
         "https://careers.adobe.com/us/en"
     ]
-    
+
     print("Searching...")
     results = await fetch_all(urls)
-    
+
     found = False
     response_data = []
 
@@ -61,9 +62,10 @@ async def search_jobs():
             })
 
     if not found:
-        return jsonify({"message": "No jobs found for the keyword"}), 200
+        return JSONResponse(content={"message": "No jobs found for the keyword"}, status_code=200)
 
-    return jsonify({"results": response_data}), 200
+    return JSONResponse(content={"results": response_data}, status_code=200)
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
