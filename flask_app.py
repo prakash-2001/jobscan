@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, render_template
 import aiohttp
 import asyncio
 from bs4 import BeautifulSoup
+import os
 
 app = Flask(__name__)
 
@@ -65,4 +66,4 @@ async def search_jobs():
     return jsonify({"results": response_data}), 200
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
