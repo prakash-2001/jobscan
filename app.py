@@ -1,11 +1,11 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
 import aiohttp
+from pydantic import BaseModel
 import asyncio
 from bs4 import BeautifulSoup
+import os
 from typing import List, Dict
-
 app = FastAPI()
 
 async def fetch(session, url):
